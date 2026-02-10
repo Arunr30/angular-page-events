@@ -1,0 +1,69 @@
+<h1>Page event container</h1>
+
+@if (loading) {
+  <div>Loading page events...</div>
+}
+
+@if (!loading && error) {
+  <div style="color: red">
+    {{ error }}
+  </div>
+}
+
+@if (!loading && !error && pageEvents.length) {
+  @for (event of pageEvents; track event.id) {
+    <div
+      style="border: 1px solid #ddd; padding: 12px; margin-bottom: 16px"
+    >
+      <h3>
+        {{ event.pageName }} — {{ event.eventProducerName }}
+      </h3>
+
+      <p>
+        <strong>Created By:</strong> {{ event.createdBy }} <br />
+        <strong>Date:</strong> {{ event.createDate }}
+      </p>
+
+      @for (
+        container of getContainers(event.eventActionContainers);
+        track container.id
+      ) {
+        <div style="margin-left: 16px">
+          <h4>Event Type: {{ container.eventType }}</h4>
+
+          @if (container.actions?.length) {
+            <strong>Actions:</strong>
+            <ul>
+              @for (action of container.actions; track action.id) {
+                <li>
+                  {{ action.actionType }}
+                  @if (action.popupControlName) {
+                    → {{ action.popupControlName }}
+                  }
+                </li>
+              }
+            </ul>
+          }
+
+          @if (container.paramBindings?.length) {
+            <strong>Param Bindings:</strong>
+            <ul>
+              @for (param of container.paramBindings; track param.id) {
+                <li>
+                  {{ param.fieldName }} → {{ param.param }}
+                  ({{ param.datasourceName }})
+                </li>
+              }
+            </ul>
+          }
+
+          <hr />
+        </div>
+      }
+    </div>
+  }
+}
+
+@if (!loading && !error && !pageEvents.length) {
+  <div>No page events found.</div>
+}
