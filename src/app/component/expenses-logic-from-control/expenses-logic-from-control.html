@@ -1,0 +1,22 @@
+<h2>Controls Related To Expenses</h2>
+
+@if (loading()) {
+  <p>Loading...</p>
+}
+
+@if (!loading() && filtered().length === 0) {
+  <p>No expense related controls found</p>
+}
+
+@if (filtered().length > 0) {
+  @for (item of filtered(); track item.id) {
+
+    <p><b>ID:</b> {{ item.id }}</p>
+    <p><b>Control Name:</b> {{ item.controlName }}</p>
+    <p><b>Page:</b> {{ item.pageName }}</p>
+    <p><b>Created By:</b> {{ item.createdBy }}</p>
+    <p><b>Expenses From Control Instance: </b>{{item.propertyDefinitions}}</p>
+    <hr />
+
+  }
+}

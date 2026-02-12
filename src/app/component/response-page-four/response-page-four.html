@@ -1,20 +1,18 @@
 <h1>Page event container</h1>
 
-@if (loading) {
+@if (loading()) {
   <div>Loading page events...</div>
 }
 
-@if (!loading && error) {
+@if (!loading() && error()) {
   <div style="color: red">
-    {{ error }}
+    {{ error() }}
   </div>
 }
 
-@if (!loading && !error && pageEvents.length) {
-  @for (event of pageEvents; track event.id) {
-    <div
-      style="border: 1px solid #ddd; padding: 12px; margin-bottom: 16px"
-    >
+@if (!loading() && !error() && pageEvents().length > 0) {
+  @for (event of pageEvents(); track event.id) {
+    <div style="border: 1px solid #ddd; padding: 12px; margin-bottom: 16px">
       <h3>
         {{ event.pageName }} — {{ event.eventProducerName }}
       </h3>
@@ -24,10 +22,7 @@
         <strong>Date:</strong> {{ event.createDate }}
       </p>
 
-      @for (
-        container of getContainers(event.eventActionContainers);
-        track container.id
-      ) {
+      @for (container of event.eventActionContainers; track container.id) {
         <div style="margin-left: 16px">
           <h4>Event Type: {{ container.eventType }}</h4>
 
@@ -64,6 +59,6 @@
   }
 }
 
-@if (!loading && !error && !pageEvents.length) {
+@if (!loading() && !error() && pageEvents().length === 0) {
   <div>No page events found.</div>
 }

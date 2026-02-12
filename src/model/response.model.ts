@@ -16,6 +16,7 @@ export interface Draft {
 }
 
 export interface PublishedDataSource {
+  propertyDefinitions: any;
   id: string;
   type: string;
   group: string;

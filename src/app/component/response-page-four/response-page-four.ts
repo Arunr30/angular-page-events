@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EventActionContainer, PageEvent } from '../../../model/page.event.model';
-import { PageEvents } from '../../service/page-events';
+import {PageEventsService } from '../../service/page-events';
 
 @Component({
   selector: 'app-response-page-four',
@@ -10,30 +10,31 @@ import { PageEvents } from '../../service/page-events';
   templateUrl: './response-page-four.html',
   styleUrl: './response-page-four.css',
 })
-export class ResponsePageFour implements OnInit {
-  pageEvents: PageEvent[] = [];
-  loading = true;
-  error = '';
+export class ResponsePageFour {
 
-  constructor(private pageEventsService: PageEvents) {}
+  pageEvents = signal<PageEvent[]>([]);
+  loading = signal(true);
+  error = signal('');
 
-  ngOnInit(): void {
+  constructor(private pageEventsService: PageEventsService) {
+    this.loadPageEvents();
+  }
+
+  private loadPageEvents() {
     this.pageEventsService.getPageEvents().subscribe({
-      next: events => {
-        this.pageEvents = events;
-        this.loading = false;
+      next: (events) => {
+        this.pageEvents.set(events);
+        this.loading.set(false);
       },
-      error: err => {
+      error: (err) => {
         console.error(err);
-        this.error = 'Failed to load page events';
-        this.loading = false;
+        this.error.set('Failed to load page events');
+        this.loading.set(false);
       },
     });
   }
 
-  getContainers(
-    containers: string | EventActionContainer[]
-  ): EventActionContainer[] {
-    return Array.isArray(containers) ? containers : [];
+  getContainers(containers: EventActionContainer[] | null | undefined) {
+    return containers ?? [];
   }
 }

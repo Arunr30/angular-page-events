@@ -1,31 +1,33 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { Page } from '../../../model/pges.model';
 import { PageService } from '../../service/page-service';
 
 @Component({
   selector: 'app-response-pagetwo',
-  imports: [],
+  standalone: true,
   templateUrl: './response-pagetwo.html',
   styleUrl: './response-pagetwo.css',
 })
-export class ResponsePagetwo implements OnInit {
+export class ResponsePagetwo {
 
-  pages: Page[] = [];
-  constructor(private pageService : PageService) {}
+  pages = signal<Page[]>([]);
+  loading = signal(true);
 
-  ngOnInit() {
+  constructor(private pageService: PageService) {
+    this.loadPages();
+  }
+
+  private loadPages() {
     this.pageService.getPages().subscribe({
       next: (res) => {
-        this.pages = res;
+        this.pages.set(res);
+        this.loading.set(false);
         console.log('Pages API response', res);
-        
       },
       error: (err) => {
         console.error('Pages API error', err);
-        
+        this.loading.set(false);
       }
-    })
+    });
   }
-
-
 }

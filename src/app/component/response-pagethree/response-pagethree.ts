@@ -1,26 +1,33 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ControlInstance } from '../../../model/control.instance.model';
 import { ControlInstanceService } from '../../service/control-instance';
 
 @Component({
   selector: 'app-response-pagethree',
-  imports: [],
+  standalone: true,
   templateUrl: './response-pagethree.html',
   styleUrl: './response-pagethree.css',
 })
-export class ResponsePagethree implements OnInit{
+export class ResponsePagethree {
 
-  controls: ControlInstance[] = [];
+  controls = signal<ControlInstance[]>([]);
+  loading = signal(true);
 
-  constructor(private service : ControlInstanceService) {};
+  constructor(private service: ControlInstanceService) {
+    this.loadControls();
+  }
 
-   ngOnInit() {
+  private loadControls() {
     this.service.getControlInstances().subscribe({
       next: (res) => {
-        this.controls = res;
+        this.controls.set(res);
+        this.loading.set(false);
         console.log('Control instances:', res);
       },
-      error: (err) => console.error(err)
+      error: (err) => {
+        console.error(err);
+        this.loading.set(false);
+      }
     });
   }
 }

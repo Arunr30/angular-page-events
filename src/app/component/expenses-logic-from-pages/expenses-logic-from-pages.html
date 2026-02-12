@@ -1,0 +1,16 @@
+<h2>Filtered Expense Pages</h2>
+
+@if (filteredPages().length > 0) {
+  <ul>
+    @for (page of filteredPages(); track page.id) {
+      <li>
+        <strong>{{ page.name }}</strong> <br />
+        Created By: {{ page.createdBy }} <br />
+        Date: {{ page.createDate }}
+        <hr />
+      </li>
+    }
+  </ul>
+} @else {
+  <p>No expense related pages found.</p>
+}

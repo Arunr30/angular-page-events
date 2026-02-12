@@ -1,0 +1,72 @@
+<h1>All Expenses Related Data</h1>
+<hr>
+
+@if (loading()) {
+  <p>Loading...</p>
+}
+
+<h2 style="color: brown;">From Pages</h2>
+<hr>
+
+@if (filteredPages().length === 0) {
+  <p>No expense pages found</p>
+}
+
+@for (page of filteredPages(); track page.id) {
+  <p><b>Page Name:</b> {{ page.name }}</p>
+  <p><b>Created By:</b> {{ page.createdBy }}</p>
+
+ 
+  <hr />
+}
+
+
+<h2 style="color: blue;">From Control Instances</h2>
+<hr />
+
+@if (filteredControls().length === 0) {
+  <p>No expense controls found</p>
+}
+
+@for (control of filteredControls(); track control.id) {
+  <p><b>Control:</b> {{ control.controlName }}</p>
+  <p><b>Page:</b> {{ control.pageName }}</p>
+  <hr />
+}
+
+
+<h2 style="color: chocolate;">From Page Events</h2>
+<hr>
+
+@if (filteredEvents().length === 0) {
+  <p>No expense events found</p>
+}
+
+@for (event of filteredEvents(); track event.id) {
+
+  <h3>Page: {{ event.pageName }}</h3>
+
+  @for (container of event.eventActionContainers; track container.id) {
+
+    <p><b>Container ID:</b> {{ container.id }}</p>
+    <p><b>Event Type:</b> {{ container.eventType }}</p>
+
+    <!-- <h4>Actions</h4>
+    @for (action of container.actions; track action.id) {
+      <p>Action Type: {{ action.actionType }}</p>
+      <p>Popup Type: {{ action.popupType }}</p>
+    } actions is empty array -->
+
+    <h4>Param Bindings</h4>
+    @for (binding of container.paramBindings; track binding.id) {
+      <p>Field Name: {{ binding.fieldName }}</p>
+      <p>Datasource: {{ binding.datasourceName }}</p>
+      <p><b>id: </b>{{binding.id}}</p>
+      <p>Param: {{ binding.param }}</p>
+    }
+
+    <hr />
+  }
+
+}
+
