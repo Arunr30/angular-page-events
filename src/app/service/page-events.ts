@@ -1,18 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import {
-  PageEvent,
-  PageEventsApiResponse,
-  PageEventApi
-} from '../../model/page.event.model';
+import { PageEvent, PageEventsApiResponse, PageEventApi } from '../../model/page.event.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PageEventsService {
-
-  private apiUrl = 'https://try.den.devum.com/devum/pageEventsContainers/draftsByAggregateName/test_page_5';
+  private apiUrl =
+    'http://192.168.1.123:4284/devum/pageEventsContainers/draftsByAggregateName/Global_dashboard';
 
   constructor(private http: HttpClient) {}
 
@@ -21,11 +17,9 @@ export class PageEventsService {
       map((response) =>
         response.published.map((event: PageEventApi) => ({
           ...event,
-          eventActionContainers: this.parseContainers(
-            event.eventActionContainers
-          )
-        }))
-      )
+          eventActionContainers: this.parseContainers(event.eventActionContainers),
+        })),
+      ),
     );
   }
 

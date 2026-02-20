@@ -1,0 +1,27 @@
+@if (filtered().length > 0) {
+  <div class="grid">
+    @for (item of filtered(); track item.id; let i = $index) {
+      <div class="card">
+        <p>{{ i + 1 }}</p>
+        <hr />
+        <p><b>dsName: </b>{{ item.dsName }}</p>
+        <p><b>id: </b>{{ item.id }}</p>
+
+        @if (getMappedFields(item).length > 0) {
+          <div class="mapped-section">
+            <p><strong>Field DsName Mapped</strong></p>
+
+            @for (field of getMappedFields(item); track field; let j = $index) {
+              <div>
+                <p><b>Field dsName:</b></p>
+                {{ j + 1 }}. {{ field }}
+              </div>
+            }
+            <hr />
+            <hr />
+          </div>
+        }
+      </div>
+    }
+  </div>
+}

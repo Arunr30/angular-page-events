@@ -4,12 +4,13 @@ export interface DataSourceResponse {
   totalResults: number;
   drafts: Draft[];
   published: PublishedDataSource[];
+  fKeyFields?: string;
 }
 
 export interface Draft {
   id: string;
   aggregateAppEntityName: string;
-  draftJsonModel: string; 
+  draftJsonModel: string;
   createdBy: string;
   createDate: string;
   enabled: boolean;
@@ -21,7 +22,7 @@ export interface PublishedDataSource {
   type: string;
   group: string;
   serviceName: string;
-  method: string;       
+  method: string;
   dsName: string;
   wsTopicResult: string;
   pageName: string;
@@ -38,4 +39,3 @@ export interface PublishedDataSource {
   shouldAutoResolveForeignKeys: boolean;
   identifier: string;
 }
-

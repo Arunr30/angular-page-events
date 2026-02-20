@@ -13,9 +13,7 @@
 @if (!loading() && !error() && pageEvents().length > 0) {
   @for (event of pageEvents(); track event.id) {
     <div style="border: 1px solid #ddd; padding: 12px; margin-bottom: 16px">
-      <h3>
-        {{ event.pageName }} — {{ event.eventProducerName }}
-      </h3>
+      <h3>{{ event.pageName }} — {{ event.eventProducerName }}</h3>
 
       <p>
         <strong>Created By:</strong> {{ event.createdBy }} <br />
@@ -40,14 +38,11 @@
             </ul>
           }
 
-          @if (container.paramBindings?.length) {
+          @if (container.paramBindings.length) {
             <strong>Param Bindings:</strong>
             <ul>
               @for (param of container.paramBindings; track param.id) {
-                <li>
-                  {{ param.fieldName }} → {{ param.param }}
-                  ({{ param.datasourceName }})
-                </li>
+                <li>{{ param.fieldName }} → {{ param.param }} ({{ param.datasourceName }})</li>
               }
             </ul>
           }

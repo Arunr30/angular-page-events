@@ -7,12 +7,12 @@ import { Page } from '../../model/pges.model';
   providedIn: 'root',
 })
 export class PageService {
-
-  private apiUrl = "https://try.den.devum.com/devum/pages"
+  private apiUrl = 'http://192.168.1.123:4284/devum/pages';
   constructor(private http: HttpClient) {}
 
   getPages(): Observable<Page[]> {
-    return this.http.get<Page[]> (this.apiUrl)
+    return this.http.get<Page[]>(this.apiUrl);
   }
-  
 }
+
+// pageEventsContainers

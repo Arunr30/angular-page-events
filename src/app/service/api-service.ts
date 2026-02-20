@@ -7,16 +7,14 @@ import { map, Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class ApiService {
+  private url =
+    'http://192.168.1.123:4284/devum/dataSourceServiceInstances/draftsByAggregateName/Global_dashboard';
 
-  private url = "https://try.den.devum.com/devum/dataSourceServiceInstances/draftsByAggregateName/test_page_5";
+  constructor(private http: HttpClient) {}
 
-  constructor(private http: HttpClient){}
-
-  getDrafts(): Observable<PublishedDataSource[]> {
-    return this.http.get<DataSourceResponse>(this.url)
-     .pipe(map(res => res.published));
-    
+  getData(): Observable<PublishedDataSource[]> {
+    return this.http.get<DataSourceResponse>(this.url).pipe(map((res) => res.published));
   }
-
-  
 }
+
+// dataSourceServiceInstances

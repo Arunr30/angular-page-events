@@ -8,10 +8,15 @@
   <p>No published data available</p>
 }
 
+<!-- @if (pages().length > 0) {
+  @for (item of pages(); track item.id) {
+    <p>{{ item.id }}</p>
+
+  }
+} -->
+
 @if (pages().length > 0) {
   @for (item of pages(); track item.id) {
-    <p><b>ID:</b> {{ item.id }}</p>
-    <p>{{ item.description }}</p>
-    <hr />
+    <p>{{ item.createdBy }}</p>
   }
 }
