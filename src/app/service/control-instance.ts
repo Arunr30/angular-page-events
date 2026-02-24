@@ -12,8 +12,8 @@ export class ControlInstanceService {
 
   constructor(private http: HttpClient) {}
 
-  getControlInstances(): Observable<ControlInstance[]> {
-    return this.http.get<ControlInstanceResponse>(this.url).pipe(map((res) => res.published));
+  getControlInstances(): Observable<ControlInstanceResponse> {
+    return this.http.get<ControlInstanceResponse>(this.url);
   }
 }
 

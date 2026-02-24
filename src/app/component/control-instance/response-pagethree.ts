@@ -9,25 +9,22 @@ import { ControlInstanceService } from '../../service/control-instance';
   styleUrl: './response-pagethree.css',
 })
 export class ResponsePagethree {
-
-  controls = signal<ControlInstance[]>([]);
-  loading = signal(true);
-
-  constructor(private service: ControlInstanceService) {
-    this.loadControls();
-  }
-
-  private loadControls() {
-    this.service.getControlInstances().subscribe({
-      next: (res) => {
-        this.controls.set(res);
-        this.loading.set(false);
-        console.log('Control instances:', res);
-      },
-      error: (err) => {
-        console.error(err);
-        this.loading.set(false);
-      }
-    });
-  }
+  // controls = signal<ControlInstance[]>([]);
+  // loading = signal(true);
+  // constructor(private service: ControlInstanceService) {
+  //   this.loadControls();
+  // }
+  // private loadControls() {
+  //   this.service.getControlInstances().subscribe({
+  //     next: (res) => {
+  //       this.controls.set(res);
+  //       this.loading.set(false);
+  //       console.log('Control instances:', res);
+  //     },
+  //     error: (err) => {
+  //       console.error(err);
+  //       this.loading.set(false);
+  //     }
+  //   });
 }
+// }

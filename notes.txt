@@ -71,34 +71,74 @@ export class TestPageComponent implements OnInit {
   private buildUsage(dataSources: any, pageEvents: any, controlInstances: any) {
     const result: DsUsage[] = [];
 
-    const filteredDS = [...(dataSources?.published || []), ...(dataSources?.drafts || [])];
+    // Filter out DS items with type MView (top-level)
+    const allDSItems = [
+      ...(dataSources?.published || []).filter((ds: any) => ds.type !== 'MView'),
+      ...(dataSources?.drafts || []).filter((ds: any) => ds.type !== 'MView')
+    ];
 
+    // Get unique dsNames
     const dsNamesSet = new Set<string>();
-    filteredDS.forEach((item: any) => {
-      if (item.dsName && item.type !== 'MView') {
-        dsNamesSet.add(item.dsName);
-      }
+    allDSItems.forEach((item) => {
+      if (item.dsName) dsNamesSet.add(item.dsName);
     });
 
-    const dataSourcesStr = JSON.stringify(filteredDS);
+    // Stringify everything for regex search
+    const dataSourcesStr = JSON.stringify(dataSources || {});
     const pageEventsStr = JSON.stringify(pageEvents || {});
     const controlInstancesStr = JSON.stringify(controlInstances || {});
 
     dsNamesSet.forEach((dsName) => {
       const fieldsSet = new Set<string>();
-      const fieldRegex = new RegExp(`${dsName}\\.([a-zA-Z0-9_\\-]+)`, 'g');
 
+      //  Parse each DS item method/draftJson explicitly
+      allDSItems.forEach((item) => {
+        if (item.dsName !== dsName) return;
+
+        // Method JSON
+        if (item.method) {
+          try {
+            const methodObj = JSON.parse(item.method);
+            methodObj.params?.forEach((p: any) => {
+              if (p.dsFieldName) fieldsSet.add(p.dsFieldName);
+            });
+            methodObj.returningResult?.forEach((r: any) => {
+              if (r.name) fieldsSet.add(r.name);
+            });
+          } catch (e) {
+            console.warn('Invalid method JSON', e);
+          }
+        }
+
+        // Draft JSON
+        if (item.draftJsonModel) {
+          try {
+            const draftObj = JSON.parse(item.draftJsonModel);
+            draftObj.params?.forEach((p: any) => {
+              if (p.dsFieldName) fieldsSet.add(p.dsFieldName);
+            });
+            draftObj.returningResult?.forEach((r: any) => {
+              if (r.name) fieldsSet.add(r.name);
+            });
+          } catch (e) {
+            console.warn('Invalid draftJsonModel JSON', e);
+          }
+        }
+      });
+
+      //  Apply regex to entire stringified datasource, pageEvents, controlInstances
+      const regex = new RegExp(`${dsName}\\.([a-zA-Z0-9_\\-]+)`, 'g');
       let match;
 
-      while ((match = fieldRegex.exec(dataSourcesStr)) !== null) {
+      while ((match = regex.exec(dataSourcesStr)) !== null) {
         fieldsSet.add(match[1]);
       }
 
-      while ((match = fieldRegex.exec(pageEventsStr)) !== null) {
+      while ((match = regex.exec(pageEventsStr)) !== null) {
         fieldsSet.add(match[1]);
       }
 
-      while ((match = fieldRegex.exec(controlInstancesStr)) !== null) {
+      while ((match = regex.exec(controlInstancesStr)) !== null) {
         fieldsSet.add(match[1]);
       }
 

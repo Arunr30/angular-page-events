@@ -12,22 +12,7 @@ export class PageEventsService {
 
   constructor(private http: HttpClient) {}
 
-  getPageEvents(): Observable<PageEvent[]> {
-    return this.http.get<PageEventsApiResponse>(this.apiUrl).pipe(
-      map((response) =>
-        response.published.map((event: PageEventApi) => ({
-          ...event,
-          eventActionContainers: this.parseContainers(event.eventActionContainers),
-        })),
-      ),
-    );
-  }
-
-  private parseContainers(value: string) {
-    try {
-      return JSON.parse(value);
-    } catch {
-      return [];
-    }
+  getPageEvents(): Observable<PageEventsApiResponse> {
+    return this.http.get<PageEventsApiResponse>(this.apiUrl);
   }
 }

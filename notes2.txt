@@ -71,11 +71,14 @@ export class TestPageComponent implements OnInit {
   private buildUsage(dataSources: any, pageEvents: any, controlInstances: any) {
     const result: DsUsage[] = [];
 
-    const filteredDS = [...(dataSources?.published || []), ...(dataSources?.drafts || [])];
+    const filteredDS = [
+      ...(dataSources?.published || []).filter((d: any) => d.type !== 'MView'),
+      ...(dataSources?.drafts || []).filter((d: any) => d.type !== 'MView'),
+    ];
 
     const dsNamesSet = new Set<string>();
     filteredDS.forEach((item: any) => {
-      if (item.dsName && item.type !== 'MView') {
+      if (item.dsName) {
         dsNamesSet.add(item.dsName);
       }
     });

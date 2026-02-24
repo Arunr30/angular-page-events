@@ -12,9 +12,19 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  getData(): Observable<PublishedDataSource[]> {
-    return this.http.get<DataSourceResponse>(this.url).pipe(map((res) => res.published));
+  getData(): Observable<DataSourceResponse> {
+    return this.http.get<DataSourceResponse>(this.url);
+    // .pipe(map((res: DataSourceResponse) => res.published || []));
   }
+
+  // getData(): Observable<any> {
+  //   return this.http.get(this.url);
+  // }
 }
+
+//   getData(): Observable<DataSourceResponse[]> {
+//     return this.http.get<DataSourceResponse[]>(this.url);
+//   }
+// }
 
 // dataSourceServiceInstances
