@@ -1,23 +1,30 @@
+<!-- Loading State -->
 <div *ngIf="loading()">
   <p>Loading data...</p>
 </div>
 
+<!-- Loaded State -->
 <div *ngIf="!loading()">
+  <!-- Empty List -->
   <div *ngIf="usageList().length === 0">
-    <p>No dsNames found.</p>
+    <p>No data sources found.</p>
   </div>
 
-  <div *ngFor="let usage of usageList()">
-    <div class="ds-card" style="margin-bottom: 1rem; padding: 0.5rem; border: 1px solid #ccc">
-      <div><strong>dsName:</strong> {{ usage.dsName }}</div>
-      <div>
-        <strong>mappedFields:</strong>
-        [
-        <span *ngFor="let field of usage.mappedFields; let last = last">
-          {{ field }}<span *ngIf="!last">, </span>
-        </span>
-        ]
-      </div>
+  <!-- Usage List -->
+  <div
+    *ngFor="let usage of usageList()"
+    class="ds-card"
+    style="margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #ccc; border-radius: 6px"
+  >
+    <div><strong>dsName:</strong> {{ usage.dsName }}</div>
+    <div *ngIf="usage.dataSourceOwnerId">
+      <strong>Owner ID:</strong> {{ usage.dataSourceOwnerId }}
+    </div>
+    <div>
+      <strong>mappedFields:</strong>
+
+      <span *ngIf="usage.mappedFields.length > 0"> [{{ usage.mappedFields.join(', ') }}] </span>
+      <span *ngIf="usage.mappedFields.length === 0">No fields found</span>
     </div>
   </div>
 </div>

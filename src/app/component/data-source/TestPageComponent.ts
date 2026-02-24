@@ -8,6 +8,7 @@ import { ControlInstanceService } from '../../service/control-instance';
 
 interface DsUsage {
   dsName: string;
+  dataSourceOwnerId?: string;
   mappedFields: string[];
 }
 
@@ -71,11 +72,22 @@ export class TestPageComponent implements OnInit {
   private buildUsage(dataSources: any, pageEvents: any, controlInstances: any) {
     const result: DsUsage[] = [];
 
-    const filteredDS = [...(dataSources?.published || []), ...(dataSources?.drafts || [])];
+    const filteredDS = [
+      ...(dataSources?.published || []).filter((d: any) => d.type !== 'MView'),
+      ...(dataSources?.drafts || []).filter((d: any) => d.type !== 'MView'),
+    ];
+
+    // Map dsName → dataSourceOwnerId
+    const dsOwnerMap = new Map<string, string>();
+    filteredDS.forEach((item: any) => {
+      if (item.dsName && item.dataSourceOwnerId && !dsOwnerMap.has(item.dsName)) {
+        dsOwnerMap.set(item.dsName, item.dataSourceOwnerId);
+      }
+    });
 
     const dsNamesSet = new Set<string>();
     filteredDS.forEach((item: any) => {
-      if (item.dsName && item.type !== 'MView') {
+      if (item.dsName) {
         dsNamesSet.add(item.dsName);
       }
     });
@@ -89,21 +101,19 @@ export class TestPageComponent implements OnInit {
       const fieldRegex = new RegExp(`${dsName}\\.([a-zA-Z0-9_\\-]+)`, 'g');
 
       let match;
-
       while ((match = fieldRegex.exec(dataSourcesStr)) !== null) {
         fieldsSet.add(match[1]);
       }
-
       while ((match = fieldRegex.exec(pageEventsStr)) !== null) {
         fieldsSet.add(match[1]);
       }
-
       while ((match = fieldRegex.exec(controlInstancesStr)) !== null) {
         fieldsSet.add(match[1]);
       }
 
       result.push({
         dsName,
+        dataSourceOwnerId: dsOwnerMap.get(dsName),
         mappedFields: Array.from(fieldsSet),
       });
     });
