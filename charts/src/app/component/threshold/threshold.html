@@ -1,0 +1,50 @@
+<div style="width: 900px; margin: 40px auto; font-family: Arial, sans-serif">
+  <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 20px">
+    <h3 style="margin: 0; font-weight: 600">Threshold Chart</h3>
+
+    <!-- Threshold mode -->
+    <select
+      [(ngModel)]="thresholdMode"
+      (change)="onModeChange()"
+      style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer"
+    >
+      <option value="overlay">Grey Overlay</option>
+      <option value="dashed">Min / Max Dashed</option>
+    </select>
+
+    <!-- Orientation toggle -->
+    <select
+      [(ngModel)]="orientation"
+      (change)="onOrientationChange()"
+      style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer"
+    >
+      <option value="horizontal">Horizontal Bars</option>
+      <option value="vertical">Vertical Bars</option>
+    </select>
+
+    <!-- Tension slider -->
+    <div *ngIf="orientation === 'vertical'" style="display: flex; align-items: center; gap: 6px">
+      <label>Tension:</label>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.1"
+        [(ngModel)]="barTension"
+        (input)="onTensionChange()"
+      />
+    </div>
+  </div>
+
+  <div
+    style="
+      height: 420px;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    "
+  >
+    <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="chartType"> </canvas>
+  </div>
+</div>

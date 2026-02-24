@@ -1,0 +1,51 @@
+
+FEATURES:
+
+dynamic horizontal and vertical ✅
+label poisition ✅
+bar color ✅ (no color picker as of now because have to work on complete ui, once ui is revamped will work on color picker for 2 bars)
+show pattern toggle ✅
+bar thickness slider ✅
+legend position drop down ✅
+stacked data sets ✅
+stacked bar toggle ✅
+multi data set 
+multi data set on the ui
+mutli data set -> stacked bars. 
+pattern preference decided by the user
+
+
+
+ISSUES to be fix
+
+PERFORMANCE OPTIMAZTION :
+
+-- ngOnInit(): void {
+    this.selectedColor = this.config[0].color;
+    this.showPattern = this.config[0].pattern ?? false;
+    this.barSize = this.config[0].barThickness ?? 30;
+    this.buildChart();
+  }   
+
+HERE THE PROBLEM IS WE ARE RE UPDATING OUR WHOLE CHARTS FOR EVERY TIME USER DID SOMETHING 
+IT WILL RE LOADING AGAIN AND AGAIN FOR SIMPLE CHANGES. 
+ 
+
+BAR SIZE ISSUE-
+
+Here the issue is when the use increase the bar thicknes, it is mergin with other bars, tried ro fix it with two getters to get dynamic 
+width and height. its working but its mainly working on graph not on the bar, have to fix it mainly bar.
+
+COLOR BAR ISSUE 
+
+i have created a color and color also chaning but the issue we dont have any okey or save button for color, 
+also when i refresh the page it changing to the default color, 
+
+TO fix
+we have to store the user pref color into the localstorage. 
+
+
+
+
+
+

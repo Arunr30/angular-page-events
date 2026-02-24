@@ -1,0 +1,284 @@
+<div style="display: flex; gap: 30px; align-items: flex-start">
+  <!-- SETTINGS PANEL -->
+  <div
+    style="
+      width: 320px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      position: sticky;
+      top: 20px;
+      height: fit-content;
+    "
+  >
+    <h3 style="margin-top: 0; margin-bottom: 20px; font-weight: 600">Chart Settings</h3>
+    <button [routerLink]="['/threshold']">Go to Threshold</button>
+    <hr style="border: none; border-top: 1px solid #eee; margin-bottom: 20px" />
+
+    <!-- Orientation -->
+    <div style="margin-bottom: 15px">
+      <label><strong>Orientation</strong></label
+      ><br />
+      <select style="width: 100%; padding: 6px" [(ngModel)]="orientation" (change)="updateChart()">
+        <option value="horizontal">Horizontal</option>
+        <option value="vertical">Vertical</option>
+      </select>
+    </div>
+
+    <!-- Label Position -->
+    <div style="margin-bottom: 15px">
+      <label><strong>Label Position</strong></label
+      ><br />
+      <select
+        style="width: 100%; padding: 6px"
+        [(ngModel)]="labelPosition"
+        (change)="updateChart()"
+      >
+        <option value="top">Top</option>
+        <option value="center">Center</option>
+        <option value="bottom">Bottom</option>
+      </select>
+    </div>
+
+    <!-- Bar Thickness -->
+    <div style="margin-bottom: 20px">
+      <label
+        ><strong>Bar Thickness: {{ barSize }}</strong></label
+      ><br />
+      <input
+        type="range"
+        style="width: 100%"
+        min="10"
+        max="80"
+        step="2"
+        [(ngModel)]="barSize"
+        (input)="updateChart()"
+      />
+    </div>
+
+    <!-- Global Show Pattern -->
+    <div style="margin-bottom: 20px">
+      <label
+        ><input type="checkbox" [(ngModel)]="showPattern" (change)="updatePatternOnly()" /> Show
+        Pattern</label
+      >
+    </div>
+
+    <!-- Per Dataset Pattern Selector -->
+    <div *ngFor="let ds of config; let i = index" style="margin-bottom: 15px">
+      <label
+        ><strong>{{ ds.label }} Pattern</strong></label
+      ><br />
+      <select
+        style="width: 100%; padding: 6px"
+        [(ngModel)]="config[i].patternType"
+        (change)="updatePatternOnly()"
+      >
+        <option value="crosshatch">Crosshatch</option>
+        <option value="dots">Dots</option>
+        <option value="dash">Dash</option>
+        <option value="diamond">Diamond</option>
+      </select>
+    </div>
+
+    <!-- Stacked Mode -->
+    <div style="margin-bottom: 20px">
+      <label
+        ><input type="checkbox" [(ngModel)]="isStacked" (change)="updateChart()" /> Enable Stacked
+        Mode</label
+      >
+    </div>
+
+    <!-- Legend -->
+    <div style="margin-bottom: 20px">
+      <label><strong>Legend Position</strong></label
+      ><br />
+      <select
+        style="width: 100%; padding: 6px"
+        [(ngModel)]="legendPosition"
+        (change)="updateChart()"
+      >
+        <option value="top">Top</option>
+        <option value="bottom">Bottom</option>
+        <option value="left">Left</option>
+        <option value="right">Right</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom: 20px">
+      <label><strong>Global Pattern</strong></label
+      ><br />
+      <select
+        style="width: 100%; padding: 6px"
+        [(ngModel)]="globalPatternType"
+        (change)="updateChart()"
+      >
+        <option value="crosshatch">Crosshatch</option>
+        <option value="dots">Dots</option>
+        <option value="dash">Dash</option>
+        <option value="diamond">Diamond</option>
+        <option value="none">None</option>
+      </select>
+    </div>
+    <div style="margin-bottom: 15px">
+      <label
+        ><strong>Label Font Size: {{ labelFontSize }}px</strong></label
+      ><br />
+      <input
+        type="range"
+        style="width: 100%"
+        min="6"
+        max="24"
+        step="1"
+        [(ngModel)]="labelFontSize"
+        (input)="updateChart()"
+      />
+    </div>
+
+    <div style="margin-bottom: 20px">
+      <label><strong>Label Font Weight</strong></label
+      ><br />
+      <select
+        style="width: 100%; padding: 6px"
+        [(ngModel)]="labelFontWeight"
+        (change)="updateChart()"
+      >
+        <option value="normal">Normal</option>
+        <option value="bold">Bold</option>
+        <option value="100">100</option>
+        <option value="200">200</option>
+        <option value="300">300</option>
+        <option value="400">400</option>
+        <option value="500">500</option>
+        <option value="600">600</option>
+        <option value="700">700</option>
+        <option value="800">800</option>
+        <option value="900">900</option>
+      </select>
+    </div>
+    <div style="margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 15px">
+      <h4>X Axis Settings</h4>
+      <label>Min:</label>
+      <input
+        type="number"
+        [(ngModel)]="xAxisMin"
+        (input)="updateChart()"
+        style="width: 100%; margin-bottom: 5px"
+      />
+      <label>Max:</label>
+      <input
+        type="number"
+        [(ngModel)]="xAxisMax"
+        (input)="updateChart()"
+        style="width: 100%; margin-bottom: 5px"
+      />
+      <label>Step Size:</label>
+      <input
+        type="number"
+        [(ngModel)]="xAxisStepSize"
+        (input)="updateChart()"
+        style="width: 100%; margin-bottom: 5px"
+      />
+      <label
+        ><input type="checkbox" [(ngModel)]="xGridLines" (change)="updateChart()" /> Show
+        Gridlines</label
+      >
+    </div>
+
+    <!-- Y Axis Customization -->
+    <div style="margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 15px">
+      <h4>Y Axis Settings</h4>
+      <label>Min:</label>
+      <input
+        type="number"
+        [(ngModel)]="yAxisMin"
+        (input)="updateChart()"
+        style="width: 100%; margin-bottom: 5px"
+      />
+      <label>Max:</label>
+      <input
+        type="number"
+        [(ngModel)]="yAxisMax"
+        (input)="updateChart()"
+        style="width: 100%; margin-bottom: 5px"
+      />
+      <label>Step Size:</label>
+      <input
+        type="number"
+        [(ngModel)]="yAxisStepSize"
+        (input)="updateChart()"
+        style="width: 100%; margin-bottom: 5px"
+      />
+      <label
+        ><input type="checkbox" [(ngModel)]="yGridLines" (change)="updateChart()" /> Show
+        Gridlines</label
+      >
+    </div>
+    <!-- Add New Data -->
+    <div style="margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 15px">
+      <h4>Add New Data</h4>
+      <input
+        type="text"
+        placeholder="Label"
+        [(ngModel)]="newLabel"
+        style="width: 100%; margin-bottom: 5px; padding: 6px"
+      />
+      <input
+        type="number"
+        placeholder="Actual Value"
+        [(ngModel)]="newActual"
+        style="width: 100%; margin-bottom: 5px; padding: 6px"
+      />
+      <input
+        type="number"
+        placeholder="Target Value"
+        [(ngModel)]="newTarget"
+        style="width: 100%; margin-bottom: 5px; padding: 6px"
+      />
+      <button
+        (click)="addData()"
+        style="
+          width: 100%;
+          padding: 6px;
+          background: #2196f3;
+          color: #fff;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        "
+      >
+        Add Data
+      </button>
+    </div>
+    <div style="margin-bottom: 20px">
+      <label><strong>Chart Type</strong></label
+      ><br />
+      <select
+        style="width: 100%; padding: 6px"
+        [(ngModel)]="selectedChartType"
+        (change)="updateChart()"
+      >
+        <option value="bar">Bar</option>
+        <option value="pie">Pie</option>
+      </select>
+    </div>
+  </div>
+  <!-- X Axis Customization -->
+
+  <!-- CHART -->
+  <div
+    style="
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      height: 450px;
+    "
+  >
+    <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="chartType"></canvas>
+  </div>
+</div>

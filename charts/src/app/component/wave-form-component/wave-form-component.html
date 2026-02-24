@@ -1,0 +1,21 @@
+<div class="wave-chart-container">
+  <div class="controls">
+    <h3>Bar Chart with Wave Tension</h3>
+
+    <label for="waveSlider"> Wave Amplitude: {{ waveAmplitude }} </label>
+
+    <input
+      id="waveSlider"
+      type="range"
+      min="0"
+      max="1"
+      step="0.05"
+      [(ngModel)]="waveAmplitude"
+      (input)="onWaveChange()"
+    />
+  </div>
+
+  <div class="chart-wrapper">
+    <canvas baseChart [data]="chartData" [options]="chartOptions" [type]="'bar'"> </canvas>
+  </div>
+</div>
