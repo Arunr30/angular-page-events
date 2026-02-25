@@ -27,6 +27,12 @@ interface OwnerGroup {
   items: DsUsage[];
 }
 
+// New type for completely unused DS
+interface UnusedDS {
+  dsName: string;
+  ownerId: string;
+}
+
 @Component({
   selector: 'app-test-page',
   standalone: true,
@@ -36,6 +42,7 @@ interface OwnerGroup {
 })
 export class TestPageComponent implements OnInit {
   usageList = signal<OwnerGroup[]>([]);
+  unusedList = signal<UnusedDS[]>([]);
   loading = signal(true);
 
   constructor(
@@ -90,30 +97,25 @@ export class TestPageComponent implements OnInit {
     controlInstances: ControlInstanceResponse,
   ): void {
     const flatResult: DsUsage[] = [];
+    const unusedDS: UnusedDS[] = [];
 
     const publishedDS = dataSources?.published ?? [];
     const draftDS = dataSources?.drafts ?? [];
-
     const allDSItems = [...publishedDS, ...draftDS].filter((d: any) => d?.type !== 'MView');
 
     const instanceIdMap = new Map<string, ControlInfo[]>();
+    const draftsFromCtrlIns = controlInstances?.drafts ?? [];
+    const publishedFromIns = controlInstances?.published ?? [];
 
-    const drafts = controlInstances?.drafts ?? [];
-    const published = controlInstances?.published ?? [];
-
-    // Draft controls
-    for (const draft of drafts) {
+    // Build instanceIdMap from control instances
+    for (const draft of draftsFromCtrlIns) {
       if (!draft?.draftJsonModel) continue;
 
       try {
         const parsed = JSON.parse(draft.draftJsonModel);
         if (parsed?.instanceId) {
           const key = String(parsed.instanceId);
-
-          if (!instanceIdMap.has(key)) {
-            instanceIdMap.set(key, []);
-          }
-
+          if (!instanceIdMap.has(key)) instanceIdMap.set(key, []);
           instanceIdMap.get(key)!.push({
             controlName: parsed.controlName,
             parentInstanceId: parsed.parentInstanceId,
@@ -124,20 +126,14 @@ export class TestPageComponent implements OnInit {
       }
     }
 
-    // Published controls
-    for (const pub of published) {
-      if (pub?.instanceId) {
-        const key = String(pub.instanceId);
-
-        if (!instanceIdMap.has(key)) {
-          instanceIdMap.set(key, []);
-        }
-
-        instanceIdMap.get(key)!.push({
-          controlName: pub.controlName ?? undefined,
-          parentInstanceId: pub.parentInstanceId ?? undefined,
-        });
-      }
+    for (const pub of publishedFromIns) {
+      if (!pub?.instanceId) continue;
+      const key = String(pub.instanceId);
+      if (!instanceIdMap.has(key)) instanceIdMap.set(key, []);
+      instanceIdMap.get(key)!.push({
+        controlName: pub.controlName ?? undefined,
+        parentInstanceId: pub.parentInstanceId ?? undefined,
+      });
     }
 
     const pageStr = JSON.stringify(pageEvents ?? {});
@@ -147,41 +143,47 @@ export class TestPageComponent implements OnInit {
       const dsName = dsItem?.dsName;
       if (!dsName) continue;
 
-      const ownerId = dsItem?.dataSourceOwnerId ? String(dsItem.dataSourceOwnerId) : undefined;
+      const ownerId = dsItem?.dataSourceOwnerId ? String(dsItem.dataSourceOwnerId) : 'NO_OWNER';
 
       const fieldsSet = new Set<string>();
       const dsStr = JSON.stringify(dsItem);
       const regex = new RegExp(`\\b${dsName}\\.([a-zA-Z0-9_\\-]+)\\b`, 'g');
 
       let match: RegExpExecArray | null;
-
       while ((match = regex.exec(dsStr))) fieldsSet.add(match[1]);
       while ((match = regex.exec(pageStr))) fieldsSet.add(match[1]);
       while ((match = regex.exec(ctrlStr))) fieldsSet.add(match[1]);
 
-      const matchedControls = ownerId ? (instanceIdMap.get(ownerId) ?? []) : [];
+      const matchedControls = instanceIdMap.get(ownerId) ?? [];
 
-      flatResult.push({
+      const dsUsage: DsUsage = {
         dsName,
         dataSourceOwnerId: ownerId,
         controls: matchedControls,
         mappedFields: Array.from(fieldsSet),
         hasMapping: matchedControls.length > 0 || fieldsSet.size > 0,
-      });
+      };
+
+      if (matchedControls.length === 0 && fieldsSet.size === 0) {
+        unusedDS.push({ ownerId, dsName });
+      } else {
+        flatResult.push(dsUsage);
+      }
     }
 
+    // Priority-wise sorting for active DS
     flatResult.sort((a, b) => {
-      const getPriority = (item: DsUsage): number => {
+      const getPriority = (item: DsUsage) => {
         const hasControls = item.controls.length > 0;
         const hasMappedFields = item.mappedFields.length > 0;
 
-        if (!hasControls && !hasMappedFields) return 1; // Not used
-        if (hasControls && !hasMappedFields) return 2; // Used but no mapping
+        if (!hasControls && !hasMappedFields) return 1; // Not used (we already pushed to unusedDS)
+        if (hasControls && !hasMappedFields) return 2; // Used but no mapped
         return 3; // Used and mapped
       };
-
       return getPriority(a) - getPriority(b);
     });
+
     console.table(
       flatResult.map((r) => ({
         ds: r.dsName,
@@ -189,15 +191,12 @@ export class TestPageComponent implements OnInit {
         mapped: r.mappedFields.length,
       })),
     );
-    const ownerMap = new Map<string, DsUsage[]>();
 
+    // Group by owner for active DS
+    const ownerMap = new Map<string, DsUsage[]>();
     for (const item of flatResult) {
       const key = item.dataSourceOwnerId ?? 'NO_OWNER';
-
-      if (!ownerMap.has(key)) {
-        ownerMap.set(key, []);
-      }
-
+      if (!ownerMap.has(key)) ownerMap.set(key, []);
       ownerMap.get(key)!.push(item);
     }
 
@@ -207,5 +206,6 @@ export class TestPageComponent implements OnInit {
     }));
 
     this.usageList.set(groupedResult);
+    this.unusedList.set(unusedDS);
   }
 }

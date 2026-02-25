@@ -100,3 +100,8 @@
     </div>
   </div>
 </div>
+
+<h3>Completely Unused Data Sources</h3>
+<div *ngFor="let item of unusedList(); let i = index">
+  {{ i + 1 }}. Owner: {{ item.ownerId }} — DS: {{ item.dsName }}
+</div>
