@@ -9,13 +9,22 @@ import { ControlInstanceResponse } from '../../../model/control.instance.model';
 import { PageEventsApiResponse } from '../../../model/page.event.model';
 import { DataSourceResponse } from '../../../model/response.model';
 
+interface ControlInfo {
+  controlName?: string;
+  parentInstanceId?: string;
+}
+
 interface DsUsage {
   dsName: string;
   dataSourceOwnerId?: string;
-  controlName?: string;
-  parentInstanceId?: string;
+  controls: ControlInfo[];
   mappedFields: string[];
   hasMapping: boolean;
+}
+
+interface OwnerGroup {
+  ownerId: string;
+  items: DsUsage[];
 }
 
 @Component({
@@ -26,7 +35,7 @@ interface DsUsage {
   styleUrls: ['./TestPageComponent.css'],
 })
 export class TestPageComponent implements OnInit {
-  usageList = signal<DsUsage[]>([]);
+  usageList = signal<OwnerGroup[]>([]);
   loading = signal(true);
 
   constructor(
@@ -80,26 +89,32 @@ export class TestPageComponent implements OnInit {
     pageEvents: PageEventsApiResponse,
     controlInstances: ControlInstanceResponse,
   ): void {
-    const result: DsUsage[] = [];
+    const flatResult: DsUsage[] = [];
 
     const publishedDS = dataSources?.published ?? [];
     const draftDS = dataSources?.drafts ?? [];
 
     const allDSItems = [...publishedDS, ...draftDS].filter((d: any) => d?.type !== 'MView');
 
-    const instanceIdMap = new Map<string, { controlName?: string; parentInstanceId?: string }>();
+    const instanceIdMap = new Map<string, ControlInfo[]>();
 
     const drafts = controlInstances?.drafts ?? [];
     const published = controlInstances?.published ?? [];
 
-    // Parse drafts
+    // Draft controls
     for (const draft of drafts) {
       if (!draft?.draftJsonModel) continue;
 
       try {
         const parsed = JSON.parse(draft.draftJsonModel);
         if (parsed?.instanceId) {
-          instanceIdMap.set(String(parsed.instanceId), {
+          const key = String(parsed.instanceId);
+
+          if (!instanceIdMap.has(key)) {
+            instanceIdMap.set(key, []);
+          }
+
+          instanceIdMap.get(key)!.push({
             controlName: parsed.controlName,
             parentInstanceId: parsed.parentInstanceId,
           });
@@ -112,7 +127,13 @@ export class TestPageComponent implements OnInit {
     // Published controls
     for (const pub of published) {
       if (pub?.instanceId) {
-        instanceIdMap.set(String(pub.instanceId), {
+        const key = String(pub.instanceId);
+
+        if (!instanceIdMap.has(key)) {
+          instanceIdMap.set(key, []);
+        }
+
+        instanceIdMap.get(key)!.push({
           controlName: pub.controlName ?? undefined,
           parentInstanceId: pub.parentInstanceId ?? undefined,
         });
@@ -130,7 +151,7 @@ export class TestPageComponent implements OnInit {
 
       const fieldsSet = new Set<string>();
       const dsStr = JSON.stringify(dsItem);
-      const regex = new RegExp(`${dsName}\\.([a-zA-Z0-9_\\-]+)`, 'g');
+      const regex = new RegExp(`\\b${dsName}\\.([a-zA-Z0-9_\\-]+)\\b`, 'g');
 
       let match: RegExpExecArray | null;
 
@@ -138,24 +159,53 @@ export class TestPageComponent implements OnInit {
       while ((match = regex.exec(pageStr))) fieldsSet.add(match[1]);
       while ((match = regex.exec(ctrlStr))) fieldsSet.add(match[1]);
 
-      const controlInfo = ownerId ? instanceIdMap.get(ownerId) : undefined;
+      const matchedControls = ownerId ? (instanceIdMap.get(ownerId) ?? []) : [];
 
-      if (ownerId && !controlInfo) {
-        console.warn(`No control match for ownerId ${ownerId} (DS: ${dsName})`);
-      }
-
-      result.push({
+      flatResult.push({
         dsName,
         dataSourceOwnerId: ownerId,
-        controlName: controlInfo?.controlName,
-        parentInstanceId: controlInfo?.parentInstanceId,
+        controls: matchedControls,
         mappedFields: Array.from(fieldsSet),
-        hasMapping: !!controlInfo || fieldsSet.size > 0,
+        hasMapping: matchedControls.length > 0 || fieldsSet.size > 0,
       });
     }
 
-    result.sort((a, b) => a.mappedFields.length - b.mappedFields.length);
+    flatResult.sort((a, b) => {
+      const getPriority = (item: DsUsage): number => {
+        const hasControls = item.controls.length > 0;
+        const hasMappedFields = item.mappedFields.length > 0;
 
-    this.usageList.set(result);
+        if (!hasControls && !hasMappedFields) return 1; // Not used
+        if (hasControls && !hasMappedFields) return 2; // Used but no mapping
+        return 3; // Used and mapped
+      };
+
+      return getPriority(a) - getPriority(b);
+    });
+    console.table(
+      flatResult.map((r) => ({
+        ds: r.dsName,
+        controls: r.controls.length,
+        mapped: r.mappedFields.length,
+      })),
+    );
+    const ownerMap = new Map<string, DsUsage[]>();
+
+    for (const item of flatResult) {
+      const key = item.dataSourceOwnerId ?? 'NO_OWNER';
+
+      if (!ownerMap.has(key)) {
+        ownerMap.set(key, []);
+      }
+
+      ownerMap.get(key)!.push(item);
+    }
+
+    const groupedResult: OwnerGroup[] = Array.from(ownerMap.entries()).map(([ownerId, items]) => ({
+      ownerId,
+      items,
+    }));
+
+    this.usageList.set(groupedResult);
   }
 }
