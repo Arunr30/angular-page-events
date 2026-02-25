@@ -9,29 +9,6 @@ import { ControlInstanceResponse } from '../../../model/control.instance.model';
 import { PageEventsApiResponse } from '../../../model/page.event.model';
 import { DataSourceResponse } from '../../../model/response.model';
 
-interface ControlInfo {
-  controlName?: string;
-  parentInstanceId?: string;
-}
-
-interface DsUsage {
-  dsName: string;
-  dataSourceOwnerId?: string;
-  controls: ControlInfo[];
-  mappedFields: string[];
-  hasMapping: boolean;
-}
-
-interface OwnerGroup {
-  ownerId: string;
-  items: DsUsage[];
-}
-
-interface UnusedDS {
-  dsName: string;
-  ownerId: string;
-}
-
 @Component({
   selector: 'app-test-page',
   standalone: true,
@@ -51,10 +28,10 @@ export class TestPageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadAll();
+    this.loadAllService();
   }
 
-  private loadAll(): void {
+  private loadAllService(): void {
     forkJoin({
       dataSources: this.dsService.getData().pipe(catchError(() => of(null))),
       pageEvents: this.pageEventsService.getPageEvents().pipe(catchError(() => of(null))),
