@@ -27,7 +27,6 @@ interface OwnerGroup {
   items: DsUsage[];
 }
 
-// New type for completely unused DS
 interface UnusedDS {
   dsName: string;
   ownerId: string;
@@ -57,27 +56,14 @@ export class TestPageComponent implements OnInit {
 
   private loadAll(): void {
     forkJoin({
-      dataSources: this.dsService.getData().pipe(
-        catchError((err) => {
-          console.error('DS error', err);
-          return of(null);
-        }),
-      ),
-      pageEvents: this.pageEventsService.getPageEvents().pipe(
-        catchError((err) => {
-          console.error('Page Events error', err);
-          return of(null);
-        }),
-      ),
-      controlInstances: this.controlInstanceService.getControlInstances().pipe(
-        catchError((err) => {
-          console.error('Control Instances error', err);
-          return of(null);
-        }),
-      ),
+      dataSources: this.dsService.getData().pipe(catchError(() => of(null))),
+      pageEvents: this.pageEventsService.getPageEvents().pipe(catchError(() => of(null))),
+      controlInstances: this.controlInstanceService
+        .getControlInstances()
+        .pipe(catchError(() => of(null))),
     }).subscribe({
       next: ({ dataSources, pageEvents, controlInstances }) => {
-        this.buildUsage(
+        this.processData(
           dataSources as DataSourceResponse,
           pageEvents as PageEventsApiResponse,
           controlInstances as ControlInstanceResponse,
@@ -91,121 +77,176 @@ export class TestPageComponent implements OnInit {
     });
   }
 
-  private buildUsage(
+  private prepareInstanceIdMap(
+    controlInstances: ControlInstanceResponse,
+  ): Map<string, ControlInfo[]> {
+    const instanceMap = new Map<string, ControlInfo[]>();
+
+    // Safely get drafts and published arrays
+    const drafts = controlInstances?.drafts ?? [];
+    const published = controlInstances?.published ?? [];
+
+    // Helper to add control to map
+    const addControl = (control: any, isDraft = false) => {
+      try {
+        const parsedControl = isDraft ? JSON.parse(control.draftJsonModel) : control;
+
+        if (!parsedControl?.instanceId) return; // skip if no instanceId
+
+        const key = String(parsedControl.instanceId);
+
+        // Initialize array if not exists
+        if (!instanceMap.has(key)) {
+          instanceMap.set(key, []);
+        }
+
+        // Push control info
+        instanceMap.get(key)!.push({
+          controlName: parsedControl.controlName,
+          parentInstanceId: parsedControl.parentInstanceId,
+        });
+      } catch (err) {
+        if (isDraft) console.warn('Invalid draft JSON:', err);
+      }
+    };
+
+    // Process all drafts
+    drafts.forEach((draft) => {
+      if (draft?.draftJsonModel) addControl(draft, true);
+    });
+
+    // Process all published
+    published.forEach((pub) => addControl(pub));
+
+    return instanceMap;
+  }
+
+  private extractMappedFields(
+    dsItem: any,
+    pageEvents: any,
+    controlInstances: any,
+    dsName: string,
+  ): string[] {
+    const fieldsSet = new Set<string>();
+    const dsStr = JSON.stringify(dsItem);
+    const pageStr = JSON.stringify(pageEvents ?? {});
+    const ctrlStr = JSON.stringify(controlInstances ?? {});
+    const regex = new RegExp(`\\b${dsName}\\.([a-zA-Z0-9_\\-]+)\\b`, 'g');
+
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(dsStr))) fieldsSet.add(match[1]);
+    while ((match = regex.exec(pageStr))) fieldsSet.add(match[1]);
+    while ((match = regex.exec(ctrlStr))) fieldsSet.add(match[1]);
+
+    return Array.from(fieldsSet);
+  }
+
+  private buildFlatResult(
     dataSources: DataSourceResponse,
     pageEvents: PageEventsApiResponse,
     controlInstances: ControlInstanceResponse,
-  ): void {
-    const flatResult: DsUsage[] = [];
-    const unusedDS: UnusedDS[] = [];
-
+    instanceIdMap: Map<string, ControlInfo[]>,
+  ): { all: DsUsage[]; unused: UnusedDS[] } {
     const publishedDS = dataSources?.published ?? [];
     const draftDS = dataSources?.drafts ?? [];
     const allDSItems = [...publishedDS, ...draftDS].filter((d: any) => d?.type !== 'MView');
 
-    const instanceIdMap = new Map<string, ControlInfo[]>();
-    const draftsFromCtrlIns = controlInstances?.drafts ?? [];
-    const publishedFromIns = controlInstances?.published ?? [];
-
-    // Build instanceIdMap from control instances
-    for (const draft of draftsFromCtrlIns) {
-      if (!draft?.draftJsonModel) continue;
-
-      try {
-        const parsed = JSON.parse(draft.draftJsonModel);
-        if (parsed?.instanceId) {
-          const key = String(parsed.instanceId);
-          if (!instanceIdMap.has(key)) instanceIdMap.set(key, []);
-          instanceIdMap.get(key)!.push({
-            controlName: parsed.controlName,
-            parentInstanceId: parsed.parentInstanceId,
-          });
-        }
-      } catch (e) {
-        console.warn('Invalid draftJsonModel', e);
-      }
-    }
-
-    for (const pub of publishedFromIns) {
-      if (!pub?.instanceId) continue;
-      const key = String(pub.instanceId);
-      if (!instanceIdMap.has(key)) instanceIdMap.set(key, []);
-      instanceIdMap.get(key)!.push({
-        controlName: pub.controlName ?? undefined,
-        parentInstanceId: pub.parentInstanceId ?? undefined,
-      });
-    }
-
-    const pageStr = JSON.stringify(pageEvents ?? {});
-    const ctrlStr = JSON.stringify(controlInstances ?? {});
+    const all: DsUsage[] = [];
+    const unused: UnusedDS[] = [];
 
     for (const dsItem of allDSItems) {
       const dsName = dsItem?.dsName;
       if (!dsName) continue;
 
       const ownerId = dsItem?.dataSourceOwnerId ? String(dsItem.dataSourceOwnerId) : 'NO_OWNER';
-
-      const fieldsSet = new Set<string>();
-      const dsStr = JSON.stringify(dsItem);
-      const regex = new RegExp(`\\b${dsName}\\.([a-zA-Z0-9_\\-]+)\\b`, 'g');
-
-      let match: RegExpExecArray | null;
-      while ((match = regex.exec(dsStr))) fieldsSet.add(match[1]);
-      while ((match = regex.exec(pageStr))) fieldsSet.add(match[1]);
-      while ((match = regex.exec(ctrlStr))) fieldsSet.add(match[1]);
-
-      const matchedControls = instanceIdMap.get(ownerId) ?? [];
+      const mappedFields = this.extractMappedFields(dsItem, pageEvents, controlInstances, dsName);
+      const controls = instanceIdMap.get(ownerId) ?? [];
 
       const dsUsage: DsUsage = {
         dsName,
         dataSourceOwnerId: ownerId,
-        controls: matchedControls,
-        mappedFields: Array.from(fieldsSet),
-        hasMapping: matchedControls.length > 0 || fieldsSet.size > 0,
+        controls,
+        mappedFields,
+        hasMapping: controls.length > 0 || mappedFields.length > 0,
       };
 
-      if (matchedControls.length === 0 && fieldsSet.size === 0) {
-        unusedDS.push({ ownerId, dsName });
-      } else {
-        flatResult.push(dsUsage);
+      all.push(dsUsage);
+
+      if (controls.length === 0 && mappedFields.length === 0) {
+        unused.push({ dsName, ownerId });
       }
     }
 
-    // Priority-wise sorting for active DS
-    flatResult.sort((a, b) => {
+    return { all, unused };
+  }
+
+  private sortByPriority(result: DsUsage[]): DsUsage[] {
+    return result.sort((a, b) => {
       const getPriority = (item: DsUsage) => {
         const hasControls = item.controls.length > 0;
-        const hasMappedFields = item.mappedFields.length > 0;
-
-        if (!hasControls && !hasMappedFields) return 1; // Not used (we already pushed to unusedDS)
-        if (hasControls && !hasMappedFields) return 2; // Used but no mapped
+        const hasMapped = item.mappedFields.length > 0;
+        if (!hasControls && !hasMapped) return 1; // Completely unused
+        if (hasControls && !hasMapped) return 2; // Used but no mapping
         return 3; // Used and mapped
       };
       return getPriority(a) - getPriority(b);
     });
+  }
+  private groupByOwner(Owner: DsUsage[]): OwnerGroup[] {
+    const ownerMap = new Map<string, DsUsage[]>();
 
+    for (const item of Owner) {
+      const ownerId = item.dataSourceOwnerId ?? 'NO_OWNER';
+
+      if (!ownerMap.has(ownerId)) {
+        ownerMap.set(ownerId, []);
+      }
+
+      ownerMap.get(ownerId)!.push(item);
+    }
+    const result: OwnerGroup[] = [];
+    for (const [ownerId, items] of ownerMap) {
+      result.push({ ownerId, items });
+    }
+
+    return result;
+  }
+
+  private processData(
+    dataSources: DataSourceResponse,
+    pageEvents: PageEventsApiResponse,
+    controlInstances: ControlInstanceResponse,
+  ): void {
+    const instanceIdMap = this.prepareInstanceIdMap(controlInstances);
+    const { all, unused } = this.buildFlatResult(
+      dataSources,
+      pageEvents,
+      controlInstances,
+      instanceIdMap,
+    );
+
+    const sortedAll = this.sortByPriority(all);
+    this.usageList.set(this.groupByOwner(sortedAll));
+    this.unusedList.set(unused);
+
+    // Optional console table for debugging
     console.table(
-      flatResult.map((r) => ({
+      sortedAll.map((r) => ({
         ds: r.dsName,
         controls: r.controls.length,
         mapped: r.mappedFields.length,
       })),
     );
 
-    // Group by owner for active DS
-    const ownerMap = new Map<string, DsUsage[]>();
-    for (const item of flatResult) {
-      const key = item.dataSourceOwnerId ?? 'NO_OWNER';
-      if (!ownerMap.has(key)) ownerMap.set(key, []);
-      ownerMap.get(key)!.push(item);
-    }
-
-    const groupedResult: OwnerGroup[] = Array.from(ownerMap.entries()).map(([ownerId, items]) => ({
-      ownerId,
-      items,
-    }));
-
-    this.usageList.set(groupedResult);
-    this.unusedList.set(unusedDS);
+    console.table(
+      unused.map((r, idx) => ({
+        '#': idx + 1,
+        ownerId: r.ownerId,
+        dsName: r.dsName,
+      })),
+    );
   }
 }
+
+// preparing instance id,
+//

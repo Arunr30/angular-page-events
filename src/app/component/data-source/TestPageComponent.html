@@ -3,12 +3,12 @@
 </div>
 
 <div *ngIf="!loading()">
+  <!-- Active Data Sources -->
   <div *ngIf="usageList().length === 0">
     <p>No data sources found.</p>
   </div>
 
-  <!-- 🔥 LOOP OWNER GROUP -->
-  <div *ngFor="let group of usageList()" style="margin-bottom: 2rem">
+  <div *ngFor="let group of usageList(); let i = index" style="margin-bottom: 2rem">
     <!-- OWNER HEADER -->
     <div
       style="
@@ -22,9 +22,9 @@
       Owner ID: {{ group.ownerId }} ({{ group.items.length }} Data Sources)
     </div>
 
-    <!-- 🔥 LOOP DATA SOURCES UNDER OWNER -->
+    <!-- DS Cards -->
     <div
-      *ngFor="let usage of group.items"
+      *ngFor="let usage of group.items; let idx = index"
       class="ds-card"
       style="
         margin-bottom: 1rem;
@@ -35,7 +35,9 @@
       "
     >
       <!-- DS NAME -->
-      <div><strong>dsName:</strong> {{ usage.dsName }}</div>
+      <div>
+        <strong>{{ idx + 1 }}. dsName:</strong> {{ usage.dsName }}
+      </div>
 
       <!-- CONTROL INFO -->
       <div style="margin-top: 0.5rem">
@@ -61,11 +63,9 @@
       <!-- MAPPED FIELDS -->
       <div style="margin-top: 0.5rem">
         <strong>Mapped Fields:</strong>
-
         <span *ngIf="usage.mappedFields.length > 0" style="color: green">
           [{{ usage.mappedFields.join(', ') }}]
         </span>
-
         <span *ngIf="usage.mappedFields.length === 0" style="color: #999"> No fields found </span>
       </div>
 
@@ -99,9 +99,15 @@
       </div>
     </div>
   </div>
-</div>
 
-<h3>Completely Unused Data Sources</h3>
-<div *ngFor="let item of unusedList(); let i = index">
-  {{ i + 1 }}. Owner: {{ item.ownerId }} — DS: {{ item.dsName }}
+  <!-- Completely Unused Data Sources -->
+  <h3>Completely Unused Data Sources</h3>
+
+  <div *ngIf="unusedList().length === 0">
+    <p>All data sources are in use.</p>
+  </div>
+
+  <div *ngFor="let item of unusedList(); let i = index">
+    {{ i + 1 }}. Owner: {{ item.ownerId }} — DS: {{ item.dsName }}
+  </div>
 </div>
