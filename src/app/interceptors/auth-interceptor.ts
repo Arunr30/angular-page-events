@@ -6,7 +6,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       'Content-Type': 'application/json',
       orgCode: 'ero',
       appCode: 'pilar',
-      apiKey: 'afdab95a-1779-414b-a219-05ec5273c1d5',
+      apiKey: 'cc749aae-4093-427e-a727-3be220c611d4',
       identifiertype: 'internal',
       sitecode: 'PILAR',
     },

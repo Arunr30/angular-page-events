@@ -1,30 +1,88 @@
-<!-- Loading State -->
 <div *ngIf="loading()">
   <p>Loading data...</p>
 </div>
 
-<!-- Loaded State -->
 <div *ngIf="!loading()">
-  <!-- Empty List -->
   <div *ngIf="usageList().length === 0">
     <p>No data sources found.</p>
   </div>
 
-  <!-- Usage List -->
   <div
     *ngFor="let usage of usageList()"
     class="ds-card"
-    style="margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #ccc; border-radius: 6px"
+    style="
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background-color: #fafafa;
+    "
   >
+    <!-- DS NAME -->
     <div><strong>dsName:</strong> {{ usage.dsName }}</div>
+
+    <!-- OWNER -->
     <div *ngIf="usage.dataSourceOwnerId">
       <strong>Owner ID:</strong> {{ usage.dataSourceOwnerId }}
     </div>
-    <div>
-      <strong>mappedFields:</strong>
 
-      <span *ngIf="usage.mappedFields.length > 0"> [{{ usage.mappedFields.join(', ') }}] </span>
-      <span *ngIf="usage.mappedFields.length === 0">No fields found</span>
+    <!-- CONTROL INFO -->
+    <div style="margin-top: 0.25rem">
+      <!-- If ownerId matched -->
+      <div *ngIf="usage.controlName; else noControlMatch">
+        <strong>Control Name:</strong> {{ usage.controlName }}
+      </div>
+
+      <div *ngIf="usage.parentInstanceId">
+        <strong>Parent Instance ID:</strong> {{ usage.parentInstanceId }}
+      </div>
+
+      <!-- If ownerId NOT matched -->
+      <ng-template #noControlMatch>
+        <div *ngIf="usage.dataSourceOwnerId" style="color: #d9534f">
+          Owner ID not matched with any control instance
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- MAPPED FIELDS -->
+    <div style="margin-top: 0.5rem">
+      <strong>Mapped Fields:</strong>
+
+      <span *ngIf="usage.mappedFields.length > 0" style="color: green">
+        [{{ usage.mappedFields.join(', ') }}]
+      </span>
+
+      <span *ngIf="usage.mappedFields.length === 0" style="color: #999"> No fields found </span>
+    </div>
+
+    <!-- STATUS BADGE -->
+    <div style="margin-top: 0.5rem">
+      <span
+        *ngIf="usage.hasMapping"
+        style="
+          background: #d4edda;
+          color: #155724;
+          padding: 3px 8px;
+          border-radius: 12px;
+          font-size: 12px;
+        "
+      >
+        ✔ In Use
+      </span>
+
+      <span
+        *ngIf="!usage.hasMapping"
+        style="
+          background: #f8d7da;
+          color: #721c24;
+          padding: 3px 8px;
+          border-radius: 12px;
+          font-size: 12px;
+        "
+      >
+        ✖ Not Used
+      </span>
     </div>
   </div>
 </div>
