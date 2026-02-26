@@ -1,6 +1,15 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { catchError, forkJoin, of } from 'rxjs';
+import {
+  catchError,
+  debounce,
+  debounceTime,
+  distinctUntilChanged,
+  forkJoin,
+  of,
+  shareReplay,
+  Subscription,
+} from 'rxjs';
 
 import { ApiService } from '../../service/api-service';
 import { PageEventsService } from '../../service/page-events';
@@ -33,11 +42,11 @@ export class TestPageComponent implements OnInit {
 
   private loadAllService(): void {
     forkJoin({
-      dataSources: this.dsService.getData().pipe(catchError(() => of(null))),
-      pageEvents: this.pageEventsService.getPageEvents().pipe(catchError(() => of(null))),
+      dataSources: this.dsService.getData().pipe(catchError(() => of([]))),
+      pageEvents: this.pageEventsService.getPageEvents().pipe(catchError(() => of([]))),
       controlInstances: this.controlInstanceService
         .getControlInstances()
-        .pipe(catchError(() => of(null))),
+        .pipe(catchError(() => of([]))),
     }).subscribe({
       next: ({ dataSources, pageEvents, controlInstances }) => {
         this.processData(
@@ -67,16 +76,12 @@ export class TestPageComponent implements OnInit {
     const addControl = (control: any, isDraft = false) => {
       try {
         const parsedControl = isDraft ? JSON.parse(control.draftJsonModel) : control;
-
         if (!parsedControl?.instanceId) return; // skip if no instanceId
-
         const key = String(parsedControl.instanceId);
-
         // Initialize array if not exists
         if (!instanceMap.has(key)) {
           instanceMap.set(key, []);
         }
-
         // Push control info
         instanceMap.get(key)!.push({
           controlName: parsedControl.controlName,
@@ -109,6 +114,11 @@ export class TestPageComponent implements OnInit {
     const pageStr = JSON.stringify(pageEvents ?? {});
     const ctrlStr = JSON.stringify(controlInstances ?? {});
     const regex = new RegExp(`\\b${dsName}\\.([a-zA-Z0-9_\\-]+)\\b`, 'g');
+
+    catchError((error) => {
+      console.error('Error fetching mapped fields', error);
+      return of([]); // return empty array instead of breaking stream
+    });
 
     let match: RegExpExecArray | null;
     while ((match = regex.exec(dsStr))) fieldsSet.add(match[1]);
@@ -224,6 +234,3 @@ export class TestPageComponent implements OnInit {
     );
   }
 }
-
-// preparing instance id,
-//
