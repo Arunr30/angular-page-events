@@ -2,13 +2,8 @@ import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   catchError,
-  debounce,
-  debounceTime,
-  distinctUntilChanged,
   forkJoin,
   of,
-  shareReplay,
-  Subscription,
 } from 'rxjs';
 
 import { ApiService } from '../../service/api-service';
