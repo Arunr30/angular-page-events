@@ -6,7 +6,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       'Content-Type': 'application/json',
       orgCode: 'ero',
       appCode: 'pilar',
-      apiKey: 'caf4e01c-980a-4fa1-833c-e0d0a8ee0863',
+      apiKey: '4811c81f-ae0e-4d36-b710-e27df431fcd8',
       identifiertype: 'internal',
       sitecode: 'PILAR',
     },
@@ -14,3 +14,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(modifiedReq);
 };
+
+
+
+
+
+// get owner id and ds name

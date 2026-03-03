@@ -6,7 +6,7 @@ import { map, Observable } from 'rxjs';
 @Injectable({
   providedIn: 'root',
 })
-export class ApiService {
+export class dataSourceService {
   private url =
     'http://192.168.1.123:4284/devum/dataSourceServiceInstances/draftsByAggregateName/Global_dashboard';
 

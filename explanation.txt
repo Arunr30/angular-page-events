@@ -1,0 +1,8 @@
+--> GET ALL OWNER ID AND DS NAME FROM DATA SOURCE SERVICE INSTANCE
+--> CHECK WHEATHER THIS OWNER ID MATCHES WITH CONTROL INSTANCE'S instance id, if it matches render control name and parent instance id
+    FROM control instance
+
+--> render all that mapped fields from control instance, page events, data source.
+
+
+--> sort priority wise.

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component,OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   catchError,
@@ -6,7 +6,7 @@ import {
   of,
 } from 'rxjs';
 
-import { ApiService } from '../../service/api-service';
+import { dataSourceService } from '../../service/api-service';
 import { PageEventsService } from '../../service/page-events';
 import { ControlInstanceService } from '../../service/control-instance';
 import { ControlInstanceResponse } from '../../../model/control.instance.model';
@@ -26,7 +26,7 @@ export class TestPageComponent implements OnInit {
   loading = signal(true);
 
   constructor(
-    private dsService: ApiService,
+    private dsService: dataSourceService,
     private pageEventsService: PageEventsService,
     private controlInstanceService: ControlInstanceService,
   ) {}
